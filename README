@@ -1,3 +1,5 @@
+Euclidean Rhythm Sequencer stuff
+
 ~$ pip install -r requirements.txt
 ~$ python
 >>> from euclid import demo
