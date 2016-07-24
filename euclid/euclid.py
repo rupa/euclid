@@ -46,12 +46,12 @@ def euclidean_rhythm(k, n):
         # no inactive steps to distribute, return the final result with
         # all of the remaining inactive steps being evenly distributed.
         if k == 0 or inactive[0] == 0:
-            return map(lambda x: x +[0]*(inactive[0]/active[0]), steps)
+            return map(lambda x: x + [0] * (inactive[0] / active[0]), steps)
         else:
             # Distribute an inactive step to each list
-            inactive[0] = inactive[0]-k
+            inactive[0] = inactive[0] - k
             return euclid(
-              k, m % k, map(lambda x: x+[0], steps[:k]) + steps[k:]
+              k, m % k, map(lambda x: x + [0], steps[:k]) + steps[k:]
             )
 
     # Return a generator that infinitely repeats a cycle of the sequence
