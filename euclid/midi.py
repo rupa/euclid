@@ -1,4 +1,5 @@
 import abc
+import logging
 import time
 
 import rtmidi
@@ -8,6 +9,10 @@ from euclid import euclidean_rhythm
 
 
 IN_PORT, OUT_PORT = 0, 0
+
+log = logging.getLogger()
+log.addHandler(logging.StreamHandler())
+log.setLevel(logging.INFO)
 
 
 class MIDIClockedSequence(object):
@@ -34,11 +39,15 @@ class EuclideanSequence(MIDIClockedSequence):
         self.k = k
         self.n = n
 
-        # channel 1, middle C/D, velocity 127
+        # msgchannel, note, velocity
         self.k_ON = (0x90, 60, 127)
         self.k_OFF = (0x80, 60, 0)
         self.n_ON = (0x90, 62, 127)
         self.n_OFF = (0x80, 62, 0)
+
+        # mshchannel, note, threshold
+        self.control_ON = (0x90, 61, 0)
+        self.rotate_ON = (0x90, 63, 0)
 
         self.STEP_LEN = step_len
         self.GATE_LEN = step_len if gate_len > step_len else gate_len
@@ -47,24 +56,24 @@ class EuclideanSequence(MIDIClockedSequence):
         self.setup_midi()
 
     def setup_midi(self):
-        print 'setting up midi'
+        log.info('setting up midi')
         self.midiin, self.port_in_name = open_midiport(
             IN_PORT, 'input', port_name='euclid input port'
         )
-        print 'set midi in port:', self.port_in_name
+        log.info('set midi in port: {0}'.format(self.port_in_name))
         self.midiout, self.port_out_name = open_midiport(
             OUT_PORT, 'output', port_name='euclid output_port'
         )
-        print 'set midi out port:', self.port_out_name
+        log.info('set midi out port: {0}'.format(self.port_out_name))
         self.midiin.set_callback(self.on_midi_in)
-        print 'set midi in callback'
+        log.info('set midi in callback')
         self._wallclock = time.time()
 
     def teardown_midi(self):
         """
         cleanup objects
         """
-        print 'tearing down midi'
+        log.info('tearing down midi')
         self.midiin.close_port()
         self.midout.close_port()
         del self.midiin
@@ -84,12 +93,24 @@ class EuclideanSequence(MIDIClockedSequence):
         """
         handle MIDI events
         """
+
+        def compare(m1, m2):
+            if (m1[0], m1[1]) == (m2[0], m2[1]) and m1[2] > m2[2]:
+                return True
+            return False
+
         message, deltatime = event
-        message[0] = hex(message[0])
         self._wallclock += deltatime
-        print('{0}@{1:0.6f} {2}'.format(
-            self.port_in_name, self._wallclock, message
-        ))
+        if compare(message, self.control_ON):
+            log.info('stepping')
+            self.step()
+        elif compare(message, self.rotate_ON):
+            log.info('rotating')
+            self.rotate()
+        else:
+            log.info('{0}@{1:0.6f} 0x{2[0]:02X} {2} {3}'.format(
+                self.port_in_name, self._wallclock, message, data
+            ))
 
     def rotate(self):
         return self.pattern.next()
@@ -116,14 +137,14 @@ class EuclideanSequence(MIDIClockedSequence):
         """
         not clocked
         """
-        print 'playing E({0}, {1})'.format(self.k, self.n)
+        log.info('playing E({0}, {1})'.format(self.k, self.n))
         try:
             while True:
                 self.step()
                 time.sleep(self.STEP_LEN - self.GATE_LEN)
         except KeyboardInterrupt:
             self.stop()
-            print 'stopping'
+            log.info('stopping')
 
     def __delete__(self):
         self.teardown_midi()
