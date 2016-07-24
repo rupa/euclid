@@ -8,8 +8,6 @@ from rtmidi.midiutil import open_midiport
 from euclid import euclidean_rhythm
 
 
-IN_PORT, OUT_PORT = 0, 0
-
 log = logging.getLogger()
 log.addHandler(logging.StreamHandler())
 log.setLevel(logging.INFO)
@@ -35,9 +33,17 @@ class EuclideanSequence(MIDIClockedSequence):
     MIDI and Euclid
     """
 
-    def __init__(self, k, n, step_len=0.25, gate_len=0.1):
+    def __init__(
+        self, k, n, port_in=None, port_out=None, step_len=0.25, gate_len=0.1
+    ):
         self.k = k
         self.n = n
+
+        self.port_in = port_in
+        self.port_out = port_out
+
+        self.STEP_LEN = step_len
+        self.GATE_LEN = step_len if gate_len > step_len else gate_len
 
         # msgchannel, note, velocity
         self.k_ON = (0x90, 60, 127)
@@ -49,20 +55,17 @@ class EuclideanSequence(MIDIClockedSequence):
         self.control_ON = (0x90, 61, 0)
         self.rotate_ON = (0x90, 63, 0)
 
-        self.STEP_LEN = step_len
-        self.GATE_LEN = step_len if gate_len > step_len else gate_len
-
         self.pattern = (self.k, self.n)
         self.setup_midi()
 
     def setup_midi(self):
         log.info('setting up midi')
         self.midiin, self.port_in_name = open_midiport(
-            IN_PORT, 'input', port_name='euclid input port'
+            self.port_in, 'input', port_name='euclid input port'
         )
         log.info('set midi in port: {0}'.format(self.port_in_name))
         self.midiout, self.port_out_name = open_midiport(
-            OUT_PORT, 'output', port_name='euclid output_port'
+            self.port_in, 'output', port_name='euclid output_port'
         )
         log.info('set midi out port: {0}'.format(self.port_out_name))
         self.midiin.set_callback(self.on_midi_in)
