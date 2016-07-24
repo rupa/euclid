@@ -13,14 +13,18 @@ class EuclideanSequence(object):
         set note(s)
     """
 
-    def __init__(self, k, n, step_len, gate_len):
+    def __init__(self, k, n, step_len=0.25, gate_len=0.1):
         self.k = k
         self.n = n
 
-        self.step_len = step_len
-        self.gate_len = gate_len
+        # channel 1, middle C/D, velocity 127
+        self.k_ON = (0x90, 60, 127)
+        self.k_OFF = (0x80, 60, 0)
+        self.n_ON = (0x90, 62, 127)
+        self.n_OFF = (0x80, 62, 0)
 
-        assert self.gate_len <= self.step_len
+        self.STEP_LEN = step_len
+        self.GATE_LEN = step_len if gate_len > step_len else gate_len
 
         # channel 1, middle C/D, velocity 127
         self.k_note = ((0x90, 60, 127), (0x80, 60, 0))
@@ -44,30 +48,33 @@ class EuclideanSequence(object):
     def rotate(self):
         return self.e.next()
 
-    def step(self, fill):
+    def step(self):
+        fill = self.rotate()
+        self.midiout.send_message(self.n_ON)
         if fill:
-            self.midiout.send_message(self.k_note[0])
-        self.midiout.send_message(self.n_note[0])
-        time.sleep(self.gate_len)
+            self.midiout.send_message(self.k_ON)
+        time.sleep(self.GATE_LEN)
+        self.midiout.send_message(self.n_OFF)
         if fill:
-            self.midiout.send_message(self.k_note[1])
-        self.midiout.send_message(self.n_note[1])
+            self.midiout.send_message(self.k_OFF)
 
     def stop(self):
-        self.midiout.send_message(self.k_note[1])
-        self.midiout.send_message(self.n_note[1])
-        time.sleep(self.step_len)
+        self.midiout.send_message(self.k_OFF)
+        self.midiout.send_message(self.n_OFF)
+        time.sleep(self.STEP_LEN)
 
     def play(self):
         print 'playing E({0}, {1}) ...'.format(self.k, self.n),
         try:
             while True:
-                self.step(self.rotate())
-                time.sleep(self.step_len - self.gate_len)
+                self.step()
+                time.sleep(self.STEP_LEN - self.GATE_LEN)
         except KeyboardInterrupt:
             self.stop()
             print 'stopping.'
 
     def __delete__(self):
+        self.midiin.close_port()
+        self.midout.close_port()
         del self.midiin
         del self.midiout
