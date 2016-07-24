@@ -1,7 +1,12 @@
 import time
+
 import rtmidi
+from rtmidi.midiutil import open_midiport
 
 from euclid import euclidean_rhythm
+
+
+IN_PORT, OUT_PORT = None, None
 
 
 class EuclideanSequence(object):
@@ -30,23 +35,29 @@ class EuclideanSequence(object):
         self.k_note = ((0x90, 60, 127), (0x80, 60, 0))
         self.n_note = ((0x90, 62, 127), (0x80, 62, 0))
 
-        self.e = euclidean_rhythm(self.k, self.n)
+        self.pattern = (self.k, self.n)
 
-        self.midiin = rtmidi.MidiIn()
-        self.midiout = rtmidi.MidiOut()
+        self.midiin, port_in_name = open_midiport(
+            IN_PORT, 'input', port_name='euclid input port'
+        )
+        print 'set midi in port:', port_in_name
+        self.midiout, port_out_name = open_midiport(
+            OUT_PORT, 'output', port_name='euclid output_port'
+        )
+        print 'set midi out port:', port_out_name
 
-        available_in_ports = self.midiin.get_ports()
-        available_out_ports = self.midiout.get_ports()
-        # the same list on QuNexus
-        print 'Ins, Outs:', available_in_ports, available_out_ports
-        if available_out_ports:
-            self.midiout.open_port(0)
-        else:
-            # ???
-            self.midiout.open_virtual_port("My virtual output")
+    @property
+    def pattern(self):
+        if not hasattr(self, '_pattern'):
+            self._pattern = euclidean_rhythm(self.k, self.n)
+        return self._pattern
+
+    @pattern.setter
+    def pattern(self, val):
+        self._pattern = euclidean_rhythm(val[0], val[1])
 
     def rotate(self):
-        return self.e.next()
+        return self.pattern.next()
 
     def step(self):
         fill = self.rotate()
@@ -64,14 +75,14 @@ class EuclideanSequence(object):
         time.sleep(self.STEP_LEN)
 
     def play(self):
-        print 'playing E({0}, {1}) ...'.format(self.k, self.n),
+        print 'playing E({0}, {1})'.format(self.k, self.n)
         try:
             while True:
                 self.step()
                 time.sleep(self.STEP_LEN - self.GATE_LEN)
         except KeyboardInterrupt:
             self.stop()
-            print 'stopping.'
+            print 'stopping'
 
     def __delete__(self):
         self.midiin.close_port()
