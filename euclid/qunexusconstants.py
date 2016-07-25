@@ -11,9 +11,9 @@ LED_HIGH_NOTE = 72
 MIDI_USB_PORT = 2
 CV_USB_PORT = 3
 
-# CV in is unipolar 0-5V
-CV_IN_VOLTS_LOW = 0
-CV_IN_VOLTS_HIGH = 5
+# CV ports are unipolar 0-5V
+CV_VOLTS_LOW = 0
+CV_VOLTS_HIGH = 5
 
 # TRRS IN
 EXPR_IN = None  # expression pedal voltage
