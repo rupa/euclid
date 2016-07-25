@@ -15,6 +15,9 @@ log.setLevel(logging.INFO)
 
 
 class MIDIClockedSequence(object):
+    """
+    ABC for stuff
+    """
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
@@ -31,13 +34,7 @@ class MIDIClockedSequence(object):
 
 class EuclideanSequence(MIDIClockedSequence):
     """
-    e:           (number of fills, number of steps)
-    port_in:     MIDI input port
-    port_out:    MIDI output port
-    channel_in:  MIDI input channel
-    channel_out: MIDI output channel
-    gate_len:    length of NOTE_ON signals, in seconds
-    step_len:    time per step, in seconds. relevant if using play()/stop()
+    Do up some Euclids
     """
 
     def __init__(
@@ -50,6 +47,15 @@ class EuclideanSequence(MIDIClockedSequence):
         gate_len=0.1,
         step_len=0.25,
     ):
+        """
+        e:           (number of fills, number of steps)
+        port_in:     MIDI input port (0 based)
+        port_out:    MIDI output port (0 based)
+        channel_in:  MIDI input channel (0 based)
+        channel_out: MIDI output channel (0 based)
+        gate_len:    length of NOTE_ON signals, in seconds
+        step_len:    time per step, in seconds. relevant if using play()/stop()
+        """
         self.k, self.n = e
 
         self.port_in = port_in
@@ -85,7 +91,7 @@ class EuclideanSequence(MIDIClockedSequence):
         )
         log.info('set midi in port: {0}'.format(self.port_in_name))
         self.midiout, self.port_out_name = open_midiport(
-            self.port_in,
+            self.port_out,
             'output',
             client_name='euclid',
             port_name='euclid output_port'
