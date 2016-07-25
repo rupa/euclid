@@ -67,22 +67,29 @@ class EuclideanSequence(MIDIClockedSequence):
         self.STEP_LEN = step_len
         self.GATE_LEN = step_len if gate_len > step_len else gate_len
 
+        step_note = 60   # C
+        k_note = 61      # C#
+        rotate_note = 62 # D
+        n_note = 63      # D#
+        reset_note = 64  # E
+
         # note, velocity
-        self.k_ON = (mc.NOTE_ON + self.channel_out, 60, 127)
-        self.k_OFF = (mc.NOTE_OFF + self.channel_out, 60, 0)
-        self.n_ON = (mc.NOTE_ON + self.channel_out, 62, 127)
-        self.n_OFF = (mc.NOTE_OFF + self.channel_out, 62, 0)
+        self.k_ON = (mc.NOTE_ON + self.channel_out, k_note, 127)
+        self.k_OFF = (mc.NOTE_OFF + self.channel_out, k_note, 0)
+        self.n_ON = (mc.NOTE_ON + self.channel_out, n_note, 127)
+        self.n_OFF = (mc.NOTE_OFF + self.channel_out, n_note, 0)
 
         # note, threshold
-        self.step_ON = (mc.NOTE_ON + self.channel_out, 61, 0)
-        self.rotate_ON = (mc.NOTE_ON + self.channel_out, 63, 0)
+        self.step_ON = (mc.NOTE_ON + self.channel_out, step_note, 0)
+        self.rotate_ON = (mc.NOTE_ON + self.channel_out, rotate_note, 0)
+        self.reset_ON = (mc.NOTE_ON + self.channel_out, reset_note, 0)
 
         self._ppqn = 24
         self._ppqn_count = 0
 
-        self.setup_midi()
+        self.reset()
 
-        self.pattern = (self.k, self.n)
+        self.setup_midi()
 
     def setup_midi(self):
         log.info('setting up midi')
@@ -136,12 +143,12 @@ class EuclideanSequence(MIDIClockedSequence):
                 if (m1[0], m1[1]) == (m2[0], m2[1]) and m1[2] > m2[2]:
                     return True
             except:
-                print 'Errr', m1, m2
+                log.error('Error: {0} vs {1}'.format(m1, m2))
             return False
 
         message, deltatime = event
 
-        if message in [[250], [251], [252]]: # start, continue, stop
+        if message in [[0xFB], [0xFC]]:      # continue, stop
             return
         if message[0] == 0xF2:               # Com Song Position Pntr
             return
@@ -152,7 +159,9 @@ class EuclideanSequence(MIDIClockedSequence):
 
         self._wallclock += deltatime
 
-        if message[0] == mc.TIMING_CLOCK:
+        if message == [mc.SONG_START]:
+            self.reset()
+        elif message[0] == mc.TIMING_CLOCK:
             if self._ppqn_count % self._ppqn == 0:
                 self.step()
                 self._ppqn_count = 0
@@ -163,6 +172,9 @@ class EuclideanSequence(MIDIClockedSequence):
         elif compare(message, self.rotate_ON):
             log.info('rotating')
             self.rotate()
+        elif compare(message, self.reset_ON):
+            log.info('reseting')
+            self.reset()
         else:
             log.info('{0}:{1:0.6f} 0x{2[0]:02X}:{3} {2} {4}'.format(
                 self.port_in_name,
@@ -171,6 +183,9 @@ class EuclideanSequence(MIDIClockedSequence):
                 M[message[0]],
                 data if data else ''
             ))
+
+    def reset(self):
+        self.pattern = (self.k, self.n)
 
     def rotate(self):
         """

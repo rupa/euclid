@@ -19,7 +19,7 @@ class QuNexusLED(EuclideanSequence):
         """
         super(QuNexusLED, self).__init__(
             e,
-            port_in=0,         # listen to keyboard
+            port_in=None,      # 0:listen to keyboard, virtual:listen to clock
             port_out=0,        # emit to LED control
             channel_in=0,      # listen to keyboard
             channel_out=0,     # emit to keyboard
@@ -27,10 +27,11 @@ class QuNexusLED(EuclideanSequence):
             step_len=step_len,
         )
 
-        k_note = qn.LED_LOW_NOTE
-        step_note = qn.LED_LOW_NOTE + 1
-        n_note = qn.LED_LOW_NOTE + 2
-        rotate_note = qn.LED_LOW_NOTE + 3
+        step_note = qn.LED_LOW_NOTE
+        k_note = qn.LED_LOW_NOTE + 1
+        rotate_note = qn.LED_LOW_NOTE + 2
+        n_note = qn.LED_LOW_NOTE + 3
+        reset_note = qn.LED_LOW_NOTE + 4
 
         # note, velocity
         self.k_ON = (mc.NOTE_ON + self.channel_out, k_note, 127)
@@ -41,6 +42,7 @@ class QuNexusLED(EuclideanSequence):
         # note, threshold
         self.step_ON = (mc.NOTE_ON + self.channel_out, step_note, 0)
         self.rotate_ON = (mc.NOTE_ON + self.channel_out, rotate_note, 0)
+        self.reset_ON = (mc.NOTE_ON + self.channel_out, reset_note, 0)
 
         self.test()
 
