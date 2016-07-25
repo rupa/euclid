@@ -51,6 +51,10 @@ or
 
 then press MIDI note 61 to step, or MIDI note 63 to rotate.
 
+# Tests
+
+./tests.sh
+
 # Notes
 
 For now, hardcoded to do the following:

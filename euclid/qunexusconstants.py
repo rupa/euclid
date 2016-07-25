@@ -39,3 +39,38 @@ MIDI_OUT_CHANNEL = 1
 # keyboard note/gate/etc sent out on MIDI channel 10
 #MIDI_OUT_CHANNEL = 10
 # controller layer listens to MIDI channel 9
+
+# Voltage conversions
+
+def uni2bi(v):
+    """
+    convert 0-5V (qunexus) to -5-5V (modular)
+    >>> uni2bi(-0.01)
+    Traceback (most recent call last):
+    ValueError: clip!
+    >>> uni2bi(0), uni2bi(2.5), uni2bi(5)
+    (-5.0, 0.0, 5.0)
+    >>> uni2bi(5.01)
+    Traceback (most recent call last):
+    ValueError: clip!
+    """
+    if 0 <= v <= 5:
+        return (v * 2.0) - 5
+    raise ValueError('clip!')
+
+
+def bi2uni(v):
+    """
+    modular to qunexus
+    >>> bi2uni(-5.01)
+    Traceback (most recent call last):
+    ValueError: clip!
+    >>> bi2uni(-5), bi2uni(0), bi2uni(5)
+    (0.0, 2.5, 5.0)
+    >>> bi2uni(5.01)
+    Traceback (most recent call last):
+    ValueError: clip!
+    """
+    if -5 <= v <= 5:
+        return (v + 5) / 2.0
+    raise ValueError('clip!')

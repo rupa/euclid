@@ -66,7 +66,3 @@ def euclidean_rhythm(k, n):
           [[1]] * k
         )
     ))
-
-if __name__ == '__main__':
-    from doctest import testmod
-    testmod()
