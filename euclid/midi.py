@@ -153,6 +153,7 @@ class EuclideanSequence(MIDIClockedSequence):
         if message[0] == 0xF2:               # Com Song Position Pntr
             return
         if 0xB0 <= message[0] <= 0xBF:       # Channel Control Mode change
+            # todo: useful stuff in here?
             return
         if 0xE0 <= message[0] <= 0xEF:       # Channel Pitch Wheel range
             return

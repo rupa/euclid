@@ -2,7 +2,9 @@
 
 MIDI Euclidean Rhythm Sequencer stuff
 
-Somewhat QuNexus oriented
+Somewhat QuNexus oriented.
+
+Sequences can be stepped, rotated, and reset.
 
 # Requirements
 
@@ -46,20 +48,12 @@ or
 ```
 ~$ python
 >>> from euclid import EuclideanSequencer
->>> e = EuclideanSequencer((5, 8), 0, 0, 0, 0)
+>>> e = EuclideanSequencer((13, 17), 0, 0, 0, 0)
 ```
 
-then press MIDI note 61 to step, or MIDI note 63 to rotate.
+then press MIDI note 60 (middle C) to step, 62 (D) to rotate, 64 (E) to reset.
+k is emitted on MIDI note 61 (C#), n on note 63 (D#).
 
 # Tests
 
 ./tests.sh
-
-# Notes
-
-For now, hardcoded to do the following:
-
-* emits MIDI 60 (middle C) on each step
-* emits MIDI 62 (middle D) on each fill
-* listens for MIDI 61 (middle C#) to step
-* listens for MIDI 63 (middle D#) to rotate
