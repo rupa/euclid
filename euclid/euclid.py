@@ -26,8 +26,10 @@ def euclidean_rhythm(k, n):
     (1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1) (14, 16)
     (1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1) (15, 16)
     """
-    # If either parameter is zero, return a generator that always returns zero
+    # If either parameter is zero, our beat is all 0s
     if 0 in (k, n): return cycle([0])
+    # If k >= n, our beat is all 1s
+    if k >=n: return cycle([1])
 
     # Keep track of the number of inactive and active steps
     # remaining to distribute

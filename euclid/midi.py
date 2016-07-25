@@ -31,22 +31,26 @@ class MIDIClockedSequence(object):
 
 class EuclideanSequence(MIDIClockedSequence):
     """
-    MIDI and Euclid
+    e:           (number of fills, number of steps)
+    port_in:     MIDI input port
+    port_out:    MIDI output port
+    channel_in:  MIDI input channel
+    channel_out: MIDI output channel
+    gate_len:    length of NOTE_ON signals, in seconds
+    step_len:    time per step, in seconds. relevant if using play()/stop()
     """
 
     def __init__(
         self,
-        k,
-        n,
+        e,
         port_in=None,
         port_out=None,
         channel_in=0,
         channel_out=0,
+        gate_len=0.1,
         step_len=0.25,
-        gate_len=0.1
     ):
-        self.k = k
-        self.n = n
+        self.k, self.n = e
 
         self.port_in = port_in
         self.port_out = port_out
@@ -67,8 +71,9 @@ class EuclideanSequence(MIDIClockedSequence):
         self.step_ON = (mc.NOTE_ON + self.channel_out, 61, 0)
         self.rotate_ON = (mc.NOTE_ON + self.channel_out, 63, 0)
 
-        self.pattern = (self.k, self.n)
         self.setup_midi()
+
+        self.pattern = (self.k, self.n)
 
     def setup_midi(self):
         log.info('setting up midi')
@@ -134,9 +139,15 @@ class EuclideanSequence(MIDIClockedSequence):
             ))
 
     def rotate(self):
+        """
+        rotate the beat clockwise
+        """
         return self.pattern.next()
 
     def step(self):
+        """
+        advance a step, and probably do stuff
+        """
         fill = self.rotate()
         self.midiout.send_message(self.n_ON)
         if fill:
