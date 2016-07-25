@@ -90,6 +90,8 @@ class EuclideanSequence(MIDIClockedSequence):
             port_name='euclid input port'
         )
         log.info('set midi in port: {0}'.format(self.port_in_name))
+        self.midiin.ignore_types(timing=False)
+        log.info('listening for clock on midi in')
         self.midiout, self.port_out_name = open_midiport(
             self.port_out,
             'output',

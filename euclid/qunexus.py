@@ -9,9 +9,9 @@ import qunexusconstants as qn
 
 class QuNexusLED(EuclideanSequence):
     """
-    Play with blinking lights
+    Play with the blinking lights
     """
-    def __init__(self, e=(1, 1), gate_len=0.1, step_len=0.25):
+    def __init__(self, e, gate_len=0.1, step_len=0.25):
         """
         e:           (number of fills, number of steps)
         gate_len:    length of NOTE_ON signals, in seconds
