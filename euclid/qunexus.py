@@ -58,18 +58,18 @@ class QuNexusLED(EuclideanSequence):
             self.midiout.send_message(
                 (mc.NOTE_OFF + self.channel_out, note, 0)
             )
-        for velocity in range(0, 128, 2):
+        for brightness in range(0, 16):
             for note in qn.LED_LOW_NOTE, qn.LED_HIGH_NOTE:
                 self.midiout.send_message(
-                    (mc.NOTE_ON + self.channel_out, note, velocity)
+                    (mc.NOTE_ON + self.channel_out, note, brightness)
                 )
-                time.sleep(0.01)
-        for velocity in range(127, -1, -2):
+                time.sleep(self.GATE_LEN)
+        for brightness in range(15, -1, -1):
             for note in qn.LED_LOW_NOTE, qn.LED_HIGH_NOTE:
                 self.midiout.send_message(
-                    (mc.NOTE_ON + self.channel_out, note, velocity)
+                    (mc.NOTE_ON + self.channel_out, note, brightness)
                 )
-                time.sleep(0.01)
+                time.sleep(self.GATE_LEN)
         self.midiout.send_message(
             (mc.NOTE_OFF + self.channel_out, qn.LED_LOW_NOTE, 0)
         )

@@ -148,14 +148,16 @@ class EuclideanSequence(MIDIClockedSequence):
 
         message, deltatime = event
 
-        if message in [[0xFB], [0xFC]]:      # continue, stop
+        if message in [[0xFB], [0xFC]]:      # Song Continue, Song Stop
             return
         if message[0] == 0xF2:               # Com Song Position Pntr
             return
-        if 0xB0 <= message[0] <= 0xBF:       # Channel Control Mode change
-            # todo: useful stuff in here?
-            return
         if 0xE0 <= message[0] <= 0xEF:       # Channel Pitch Wheel range
+            return
+
+        if b2n(message[0])[0] == 0xB:        # Channel Control
+            if b2n(message[0])[1] == self.midi_in_channel:
+                pass
             return
 
         self._wallclock += deltatime
@@ -230,3 +232,36 @@ class EuclideanSequence(MIDIClockedSequence):
 
     def __delete__(self):
         self.teardown_midi()
+
+
+def b2n(byte):
+    """
+    >>> b2n(-1)
+    Traceback (most recent call last):
+    ValueError
+    >>> b2n(0), b2n(255)
+    ((0, 0), (15, 15))
+    >>> b2n(256)
+    Traceback (most recent call last):
+    ValueError
+    """
+    if 0 <= byte <= 255:
+        # high, low
+        return byte >> 4, byte & 0x0F
+    raise ValueError
+
+
+def n2b(high, low):
+    """
+    >>> n2b(-1, -1)
+    Traceback (most recent call last):
+    ValueError
+    >>> n2b(0, 0), n2b(15, 15)
+    (0, 255)
+    >>> n2b(16, 16)
+    Traceback (most recent call last):
+    ValueError
+    """
+    if 0 <= high <= 15 and 0 <= low <= 15:
+        return 0xff & (((0xff & high) << 4) | (0xff & low))
+    raise ValueError
