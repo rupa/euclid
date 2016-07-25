@@ -2,11 +2,11 @@ import abc
 import logging
 import time
 
-import rtmidi
 import rtmidi.midiconstants as mc
 from rtmidi.midiutil import open_midiport
 
 from euclid import euclidean_rhythm
+from midievents import MIDI_BYTE_LOOKUP as M
 
 
 log = logging.getLogger()
@@ -77,6 +77,9 @@ class EuclideanSequence(MIDIClockedSequence):
         self.step_ON = (mc.NOTE_ON + self.channel_out, 61, 0)
         self.rotate_ON = (mc.NOTE_ON + self.channel_out, 63, 0)
 
+        self._ppqn = 24
+        self._ppqn_count = 0
+
         self.setup_midi()
 
         self.pattern = (self.k, self.n)
@@ -129,21 +132,44 @@ class EuclideanSequence(MIDIClockedSequence):
         """
 
         def compare(m1, m2):
-            if (m1[0], m1[1]) == (m2[0], m2[1]) and m1[2] > m2[2]:
-                return True
+            try:
+                if (m1[0], m1[1]) == (m2[0], m2[1]) and m1[2] > m2[2]:
+                    return True
+            except:
+                print 'Errr', m1, m2
             return False
 
         message, deltatime = event
+
+        if message in [[250], [251], [252]]: # start, continue, stop
+            return
+        if message[0] == 0xF2:               # Com Song Position Pntr
+            return
+        if 0xB0 <= message[0] <= 0xBF:       # Channel Control Mode change
+            return
+        if 0xE0 <= message[0] <= 0xEF:       # Channel Pitch Wheel range
+            return
+
         self._wallclock += deltatime
-        if compare(message, self.step_ON):
+
+        if message[0] == mc.TIMING_CLOCK:
+            if self._ppqn_count % self._ppqn == 0:
+                self.step()
+                self._ppqn_count = 0
+            self._ppqn_count += 1
+        elif compare(message, self.step_ON):
             log.info('stepping')
             self.step()
         elif compare(message, self.rotate_ON):
             log.info('rotating')
             self.rotate()
         else:
-            log.info('{0}@{1:0.6f} 0x{2[0]:02X} {2} {3}'.format(
-                self.port_in_name, self._wallclock, message, data
+            log.info('{0}:{1:0.6f} 0x{2[0]:02X}:{3} {2} {4}'.format(
+                self.port_in_name,
+                self._wallclock,
+                message,
+                M[message[0]],
+                data if data else ''
             ))
 
     def rotate(self):
