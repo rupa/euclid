@@ -3,6 +3,7 @@ import logging
 import time
 
 import rtmidi
+import rtmidi.midiconstants as mc
 from rtmidi.midiutil import open_midiport
 
 from euclid import euclidean_rhythm
@@ -34,7 +35,15 @@ class EuclideanSequence(MIDIClockedSequence):
     """
 
     def __init__(
-        self, k, n, port_in=None, port_out=None, step_len=0.25, gate_len=0.1
+        self,
+        k,
+        n,
+        port_in=None,
+        port_out=None,
+        channel_in=0,
+        channel_out=0,
+        step_len=0.25,
+        gate_len=0.1
     ):
         self.k = k
         self.n = n
@@ -42,18 +51,21 @@ class EuclideanSequence(MIDIClockedSequence):
         self.port_in = port_in
         self.port_out = port_out
 
+        self.channel_in = 0 if channel_in > 15 else channel_in
+        self.channel_out = 0 if channel_out > 15 else channel_out
+
         self.STEP_LEN = step_len
         self.GATE_LEN = step_len if gate_len > step_len else gate_len
 
-        # msgchannel, note, velocity
-        self.k_ON = (0x90, 60, 127)
-        self.k_OFF = (0x80, 60, 0)
-        self.n_ON = (0x90, 62, 127)
-        self.n_OFF = (0x80, 62, 0)
+        # note, velocity
+        self.k_ON = (mc.NOTE_ON + self.channel_out, 60, 127)
+        self.k_OFF = (mc.NOTE_OFF + self.channel_out, 60, 0)
+        self.n_ON = (mc.NOTE_ON + self.channel_out, 62, 127)
+        self.n_OFF = (mc.NOTE_OFF + self.channel_out, 62, 0)
 
-        # mshchannel, note, threshold
-        self.control_ON = (0x90, 61, 0)
-        self.rotate_ON = (0x90, 63, 0)
+        # note, threshold
+        self.step_ON = (mc.NOTE_ON + self.channel_out, 61, 0)
+        self.rotate_ON = (mc.NOTE_ON + self.channel_out, 63, 0)
 
         self.pattern = (self.k, self.n)
         self.setup_midi()
@@ -61,11 +73,17 @@ class EuclideanSequence(MIDIClockedSequence):
     def setup_midi(self):
         log.info('setting up midi')
         self.midiin, self.port_in_name = open_midiport(
-            self.port_in, 'input', port_name='euclid input port'
+            self.port_in,
+            'input',
+            client_name='euclid',
+            port_name='euclid input port'
         )
         log.info('set midi in port: {0}'.format(self.port_in_name))
         self.midiout, self.port_out_name = open_midiport(
-            self.port_in, 'output', port_name='euclid output_port'
+            self.port_in,
+            'output',
+            client_name='euclid',
+            port_name='euclid output_port'
         )
         log.info('set midi out port: {0}'.format(self.port_out_name))
         self.midiin.set_callback(self.on_midi_in)
@@ -104,7 +122,7 @@ class EuclideanSequence(MIDIClockedSequence):
 
         message, deltatime = event
         self._wallclock += deltatime
-        if compare(message, self.control_ON):
+        if compare(message, self.step_ON):
             log.info('stepping')
             self.step()
         elif compare(message, self.rotate_ON):
