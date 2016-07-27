@@ -25,25 +25,12 @@ class QuNexusLED(EuclideanSequence):
             channel_out=0,     # emit to keyboard
             gate_len=gate_len,
             step_len=step_len,
+            step_note=qn.LED_LOW_NOTE,
+            k_note=qn.LED_LOW_NOTE + 1,
+            rotate_note=qn.LED_LOW_NOTE + 2,
+            n_note=qn.LED_LOW_NOTE + 3,
+            reset_note=qn.LED_LOW_NOTE + 4,
         )
-
-        step_note = qn.LED_LOW_NOTE
-        k_note = qn.LED_LOW_NOTE + 1
-        rotate_note = qn.LED_LOW_NOTE + 2
-        n_note = qn.LED_LOW_NOTE + 3
-        reset_note = qn.LED_LOW_NOTE + 4
-
-        # note, velocity
-        self.k_ON = (mc.NOTE_ON + self.channel_out, k_note, 127)
-        self.k_OFF = (mc.NOTE_OFF + self.channel_out, k_note, 0)
-        self.n_ON = (mc.NOTE_ON + self.channel_out, n_note, 127)
-        self.n_OFF = (mc.NOTE_OFF + self.channel_out, n_note, 0)
-
-        # note, threshold
-        self.step_ON = (mc.NOTE_ON + self.channel_out, step_note, 0)
-        self.rotate_ON = (mc.NOTE_ON + self.channel_out, rotate_note, 0)
-        self.reset_ON = (mc.NOTE_ON + self.channel_out, reset_note, 0)
-
         self.test()
 
     def test(self):

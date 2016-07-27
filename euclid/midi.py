@@ -46,6 +46,11 @@ class EuclideanSequence(MIDIClockedSequence):
         channel_out=0,
         gate_len=0.1,
         step_len=0.25,
+        step_note=60,   # C
+        k_note=61,      # C#
+        rotate_note=62, # D
+        n_note=63,      # D#
+        reset_note=64,  # E
     ):
         """
         e:           (number of fills, number of steps)
@@ -55,6 +60,11 @@ class EuclideanSequence(MIDIClockedSequence):
         channel_out: MIDI output channel (0 based)
         gate_len:    length of NOTE_ON signals, in seconds
         step_len:    time per step, in seconds. relevant if using play()/stop()
+        step_note:   play the next step
+        k_note:      MIDI note for fill
+        rotate_note: rotate the sequence
+        n_note:      MIDI note for n
+        reset_note:  reset the sequence
         """
         self.k, self.n = e
 
@@ -67,12 +77,6 @@ class EuclideanSequence(MIDIClockedSequence):
         self.STEP_LEN = step_len
         self.GATE_LEN = step_len if gate_len > step_len else gate_len
 
-        step_note = 60   # C
-        k_note = 61      # C#
-        rotate_note = 62 # D
-        n_note = 63      # D#
-        reset_note = 64  # E
-
         # note, velocity
         self.k_ON = (mc.NOTE_ON + self.channel_out, k_note, 127)
         self.k_OFF = (mc.NOTE_OFF + self.channel_out, k_note, 0)
@@ -84,7 +88,7 @@ class EuclideanSequence(MIDIClockedSequence):
         self.rotate_ON = (mc.NOTE_ON + self.channel_out, rotate_note, 0)
         self.reset_ON = (mc.NOTE_ON + self.channel_out, reset_note, 0)
 
-        self._ppqn = 24
+        self.ppqn = 24
         self._ppqn_count = 0
 
         self.reset()
@@ -156,7 +160,7 @@ class EuclideanSequence(MIDIClockedSequence):
             return
 
         if b2n(message[0])[0] == 0xB:        # Channel Control
-            if b2n(message[0])[1] == self.midi_in_channel:
+            if b2n(message[0])[1] == self.channel_in:
                 pass
             return
 
@@ -165,7 +169,7 @@ class EuclideanSequence(MIDIClockedSequence):
         if message == [mc.SONG_START]:
             self.reset()
         elif message[0] == mc.TIMING_CLOCK:
-            if self._ppqn_count % self._ppqn == 0:
+            if self._ppqn_count % self.ppqn == 0:
                 self.step()
                 self._ppqn_count = 0
             self._ppqn_count += 1
